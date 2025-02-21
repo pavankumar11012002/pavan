@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_HISTORY_SIZE 100
+#define MAX_URL_LENGTH 256
+
+typedef struct {
+    char url[MAX_URL_LENGTH];
+} Page;
+
+typedef struct {
+    Page pages[MAX_HISTORY_SIZE];
+    int top;
+    int forward_top; // Separate top for forward history
+} BrowserHistory;
+
+void initializeHistory(BrowserHistory *history) {
+    history->top = -1;
+    history->forward_top = -1;
+}
+
+void visitPage(BrowserHistory *history, const char *url) {
+    if (history->top < MAX_HISTORY_SIZE - 1) {
+        history->top++;
+        strcpy(history->pages[history->top].url, url);
+
+       // Clear forward history when a new page is visited
+        history->forward_top = -1;
+        printf("Visited: %s\n", url);
+
+    } else {
+        printf("History full!\n");
+    }
+}
+
+void goBack(BrowserHistory *history) {
+    if (history->top > 0) {
+        // Move the current page to the forward history
+        if (history->forward_top < MAX_HISTORY_SIZE -1){
+            history->forward_top++;
+            strcpy(history->pages[history->forward_top].url, history->pages[history->top].url);
+        }
+        history->top--;
+        printf("Current Page: %s\n", history->pages[history->top].url);
+    } else {
+        printf("Cannot go back!\n");
+    }
+}
+
+void goForward(BrowserHistory *history) {
+    if (history->forward_top > -1) {
+        history->top++;
+        strcpy(history->pages[history->top].url, history->pages[history->forward_top].url);
+        history->forward_top--;
+        printf("Current Page: %s\n", history->pages[history->top].url);
+    } else {
+        printf("Cannot go forward!\n");
+    }
+}
+
+void displayCurrentPage(BrowserHistory *history) {
+    if (history->top >= 0) {
+        printf("Current Page: %s\n", history->pages[history->top].url);
+    } else {
+        printf("No page visited yet.\n");
+    }
+}
+
+
+int main() {
+    BrowserHistory history;
+    initializeHistory(&history);
+
+    visitPage(&history, "google.com");
+    visitPage(&history, "github.com");
+    visitPage(&history, "stackoverflow.com");
+
+    goBack(&history); // Current Page: github.com
+    goForward(&history); // Current Page: stackoverflow.com
+    goBack(&history); // Current Page: github.com
+    goBack(&history); // Current Page: google.com
+    goBack(&history); // Cannot go back!
+    goForward(&history); // Current Page: github.com
+    visitPage(&history, "youtube.com"); //Clears forward history, current page: youtube.com
+    goForward(&history); // Cannot go forward!
+
+    return 0;
+}
